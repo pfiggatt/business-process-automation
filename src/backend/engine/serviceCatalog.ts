@@ -7,7 +7,14 @@ import { FormRec } from "../services/formrec"
 import { Translate } from "../services/translate"
 import { HuggingFace } from "../services/huggingface"
 import { Test } from "../services/test"
+import { Preprocess } from "../services/preprocess"
+import { DocumentTranslation } from "../services/documentTranslation"
+import { AutoMlNer } from "../services/automlner"
+import { ChangeOutput } from "../services/changeOutput"
+import { Blob } from "../services/blob"
 
+const changeOutput = new ChangeOutput()
+const blob = new Blob(process.env.AzureWebJobsStorage, process.env.BLOB_STORAGE_CONTAINER)
 const ocr = new Ocr(process.env.OCR_ENDPOINT,process.env.OCR_APIKEY)
 const cosmosDb = new CosmosDB(process.env.COSMOSDB_CONNECTION_STRING,process.env.COSMOSDB_DB_NAME, process.env.COSMOSDB_CONTAINER_NAME)
 const language = new LanguageStudio(process.env.LANGUAGE_STUDIO_PREBUILT_ENDPOINT, process.env.LANGUAGE_STUDIO_PREBUILT_APIKEY)
@@ -15,7 +22,62 @@ const speech = new Speech(process.env.SPEECH_SUB_KEY,process.env.SPEECH_SUB_REGI
 const formrec = new FormRec(process.env.FORMREC_ENDPOINT, process.env.FORMREC_APIKEY)
 const translate = new Translate(process.env.TRANSLATE_ENDPOINT, process.env.TRANSLATE_APIKEY, process.env.TRANSLATE_REGION)
 const huggingface = new HuggingFace(process.env.HUGGINGFACE_ENDPOINT)
+const preprocess = new Preprocess(process.env.HUGGINGFACE_ENDPOINT)
+const documentTranslation = new DocumentTranslation(process.env.BLOB_STORAGE_ACCOUNT_NAME, process.env.BLOB_STORAGE_ACCOUNT_KEY, process.env.DOCUMENT_TRANSLATION_ENDPOINT, process.env.DOCUMENT_TRANSLATION_KEY)
+const automlNer = new AutoMlNer(process.env.AUTOML_NER_ENDPOINT, process.env.AUTOML_NER_APIKEY)
 const test = new Test()
+
+const toTxtService : BpaService = {
+    bpaServiceId : "abc123",
+    inputTypes: ["text"],
+    outputTypes: ["text"],
+    name: "totxt",
+    process: blob.toTxt,
+    serviceSpecificConfig: {
+        
+    },
+    serviceSpecificConfigDefaults: {
+
+    }
+}
+
+
+// const copyService : BpaService = {
+//     bpaServiceId : "abc123",
+//     inputTypes: ["pdf"],
+//     outputTypes: ["pdf"],
+//     name: "copy",
+//     process: blob.conditionalCopy,
+//     serviceSpecificConfig: {
+
+
+const changeOutputService : BpaService = {
+    bpaServiceId : "abc123",
+    inputTypes: ["any"],
+    outputTypes: ["changeOutput"],
+    name: "changeOutput",
+    process: changeOutput.process,
+    serviceSpecificConfig: {
+        
+    },
+    serviceSpecificConfigDefaults: {
+
+    }
+}
+
+const automlNerService : BpaService = {
+    bpaServiceId : "abc123",
+    inputTypes: ["text"],
+    outputTypes: ["automlNer"],
+    name: "automlNer",
+    process: automlNer.process,
+    serviceSpecificConfig: {
+        
+    },
+    serviceSpecificConfigDefaults: {
+
+    }
+}
 
 const translateService : BpaService = {
     bpaServiceId : "abc123",
@@ -87,6 +149,7 @@ const prebuiltBusinessCard : BpaService = {
 
     }
 }
+
 
 const prebuiltIdentity : BpaService = {
     bpaServiceId : "abc123",
@@ -325,6 +388,34 @@ const singleCategoryClassify : BpaService = {
     }
 }
 
+const healthCareService : BpaService = {
+    inputTypes: ["text"],
+    outputTypes: ["healthCareResults"],
+    name: "healthCare",
+    bpaServiceId: "abc123",
+    process: language.healthCare,
+    serviceSpecificConfig: {
+
+    },
+    serviceSpecificConfigDefaults: {
+
+    }
+}
+
+const preprocessService : BpaService = {
+    inputTypes: ["text"],
+    outputTypes: ["preprocess"],
+    name: "preprocess",
+    bpaServiceId: "abc123",
+    process: preprocess.process,
+    serviceSpecificConfig: {
+
+    },
+    serviceSpecificConfigDefaults: {
+
+    }
+}
+
 const huggingFaceNER : BpaService = {
     inputTypes: ["text"],
     outputTypes: ["huggingFaceNER"],
@@ -339,7 +430,22 @@ const huggingFaceNER : BpaService = {
     }
 }
 
+const documentTranslationService : BpaService = {
+    inputTypes: ["pdf"],
+    outputTypes: ["pdf"],
+    name: "documentTranslation",
+    bpaServiceId: "abc123",
+    process: documentTranslation.process,
+    serviceSpecificConfig: {
+
+    },
+    serviceSpecificConfigDefaults: {
+
+    }
+}
+
 export const serviceCatalog = {
+    // "copy" : copyService,
     "ocrService" : ocrService, 
     "viewService" : viewService,
     "extractSummary" : extractSummary,
@@ -362,6 +468,12 @@ export const serviceCatalog = {
     "recognizePiiEntities" : recognizePiiEntities,
     "singleCategoryClassify" : singleCategoryClassify,
     "huggingFaceNER" : huggingFaceNER,
-    "testService" : testService
+    "preprocess" : preprocessService,
+    "testService" : testService,
+    "healthCare" : healthCareService,
+    "documentTranslation" : documentTranslationService,
+    "automlNer" : automlNerService,
+    "changeOutput" : changeOutputService,
+    "totxt" : toTxtService
 }
 

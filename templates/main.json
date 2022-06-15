@@ -26,9 +26,29 @@
       "type": "string",
       "defaultValue": "split"
     },
+    "blobCogSearchContainerName": {
+      "type": "string",
+      "defaultValue": "cogsearch"
+    },
+    "blobTranslatedContainerName": {
+      "type": "string",
+      "defaultValue": "translated-documents"
+    },
+    "cogSearchName": {
+      "type": "string",
+      "defaultValue": "[parameters('projectName')]"
+    },
+    "cogSearchUrl": {
+      "type": "string",
+      "defaultValue": "[format('https://{0}.search.windows.net', parameters('projectName'))]"
+    },
     "formrecName": {
       "type": "string",
       "defaultValue": "[parameters('projectName')]"
+    },
+    "docTranslatorAccountName": {
+      "type": "string",
+      "defaultValue": "[format('doctranslator{0}', parameters('projectName'))]"
     },
     "branch": {
       "type": "string",
@@ -206,6 +226,23 @@
     ]
   },
   "resources": [
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('docTranslatorAccountName')]",
+      "location": "[parameters('primaryRegion')]",
+      "sku": {
+        "name": "S1"
+      },
+      "kind": "TextTranslation",
+      "identity": {
+        "type": "None"
+      },
+      "properties": {
+        "customSubDomainName": "[parameters('docTranslatorAccountName')]",
+        "publicNetworkAccess": "Enabled"
+      }
+    },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
@@ -413,6 +450,24 @@
       ]
     },
     {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2021-08-01",
+      "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', parameters('blobTranslatedContainerName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2021-08-01",
+      "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', parameters('blobCogSearchContainerName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
       "type": "Microsoft.DocumentDB/databaseAccounts",
       "apiVersion": "2021-01-15",
       "name": "[variables('accountName_var')]",
@@ -527,6 +582,22 @@
       }
     },
     {
+        "apiVersion": "2021-04-01-Preview",
+        "name": "[parameters('cogSearchName')]",
+        "location": "[parameters('primaryRegion')]",
+        "type": "Microsoft.Search/searchServices",
+        "sku": {
+            "name": "standard"
+        },
+        "properties": {
+            "replicaCount": 1,
+            "partitionCount": 1,
+            "hostingMode": "Default"
+        },
+        "tags": {},
+        "dependsOn": []
+    },
+    {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2020-06-01",
       "name": "[parameters('functionAppNamePython')]",
@@ -601,7 +672,7 @@
             },
             {
               "name": "AzureFunctionsJobHost__extensions__queues__newBatchThreshold",
-              "value": "20"
+              "value": "5"
             },
             {
               "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
@@ -624,12 +695,40 @@
               "value": "node"
             },
             {
+              "name": "COGSEARCH_URL",
+              "value": "[parameters('cogSearchUrl')]"
+            },
+            {
+              "name": "COGSEARCH_APIKEY",
+              "value": "[listAdminKeys(resourceId('Microsoft.Search/searchServices', parameters('cogSearchName')), '2021-04-01-Preview').primaryKey]"
+            },
+            {
+              "name": "BLOB_STORAGE_ACCOUNT_NAME",
+              "value": "[parameters('projectName')]"
+            },
+            {
+              "name": "BLOB_STORAGE_ACCOUNT_KEY",
+              "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+            },
+            {
               "name": "BLOB_STORAGE_CONTAINER",
               "value": "[parameters('blobContainerName')]"
             },
-                        {
+            {
               "name": "BLOB_STORAGE_SPLIT_CONTAINER",
               "value": "[parameters('blobSplitContainerName')]"
+            },
+            {
+              "name": "BLOB_STORAGE_COGSEARCH_CONTAINER",
+              "value": "[parameters('blobCogSearchContainerName')]"
+            },
+            {
+              "name": "DOCUMENT_TRANSLATION_ENDPOINT",
+              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', parameters('docTranslatorAccountName'))).endpoints.DocumentTranslation]"
+            },
+            {
+              "name": "DOCUMENT_TRANSLATION_KEY",
+              "value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('docTranslatorAccountName')), '2021-10-01').key1]"
             },
             {
               "name": "COSMOSDB_CONNECTION_STRING",
@@ -651,7 +750,7 @@
               "name": "OCR_APIKEY",
               "value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('cogServicesName')), '2021-10-01').key1]"
             },
-             {
+            {
               "name": "LANGUAGE_STUDIO_PREBUILT_ENDPOINT",
               "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', parameters('languageServicesName'))).endpoint]"
             },
@@ -700,7 +799,8 @@
         "[resourceId('Microsoft.CognitiveServices/accounts', parameters('cogServicesName'))]",
         "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
         "[resourceId('Microsoft.CognitiveServices/accounts', parameters('languageServicesName'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+        "[resourceId('Microsoft.Search/searchServices', parameters('cogSearchName'))]"
       ]
     },
     {
@@ -734,7 +834,7 @@
         "COSMOS_DB_CONTAINER": "[parameters('cosmosContainerName')]",
         "BLOB_STORAGE_CONNECTION_STRING": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('storageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2021-08-01').keys[0].value)]",
         "BLOB_STORAGE_CONTAINER": "[parameters('blobContainerName')]",
-        "BLOB_STORAGE_SPLIT_CONTAINER" : "[parameters('blobSplitContainerName')]"
+        "BLOB_STORAGE_SPLIT_CONTAINER": "[parameters('blobSplitContainerName')]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('accountName_var'))]",

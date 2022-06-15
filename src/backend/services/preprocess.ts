@@ -1,7 +1,7 @@
 import { BpaServiceObject } from "../engine/types";
 import axios from 'axios'
 
-export class HuggingFace {
+export class Preprocess {
 
     private _endpoint
     
@@ -11,20 +11,19 @@ export class HuggingFace {
 
     public process = async (input : BpaServiceObject, index : number) : Promise<BpaServiceObject> => {
         const body = {
-            text : input.data,
-            modelId : input.serviceSpecificConfig.modelId
+            text : input.data
         }
         console.log(JSON.stringify(body))
-        const result = await axios.post(`${this._endpoint}/api/analyze`, body)
+        const result = await axios.post(`${this._endpoint}/api/preprocess`, body)
         const results = input.aggregatedResults
-        results["huggingFaceNer"] = result
-        input.resultsIndexes.push({index : index, name : "huggingFaceNer", type : "huggingFaceNer"})
+        results["preprocess"] = result
+        input.resultsIndexes.push({index : index, name : "preprocess", type : "preprocess"})
         return {
             data : result.data,
-            label : "huggingFaceNer",
+            label : "preprocess",
             bpaId : input.bpaId,
             projectName : input.projectName,
-            type : "huggingFaceNer",
+            type : "preprocess",
             aggregatedResults : results,
             resultsIndexes : input.resultsIndexes
         }

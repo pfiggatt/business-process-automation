@@ -22,20 +22,76 @@ import storage from './images/storage.svg'
 import wav from './images/wav.svg'
 
 export const sc = {
-    "test": {
+    "totxt": {
         "bpaServiceId": "abc123",
         "inputTypes": [
-            "pdf"
+            "text"
         ],
         "outputTypes": [
-            "test"
+            "text"
         ],
-        "image": pdf,
-        "label": "Test Prebuilt Models",
-        "name": "test",
-        "serviceSpecificConfig": { "to":"es"},
+        "image": summarize,
+        "label": "Convert To TXT File",
+        "name": "totxt",
+        "serviceSpecificConfig": {},
         "serviceSpecificConfigDefaults": {}
     },
+    // "copy": {
+    //     "bpaServiceId": "abc123",
+    //     "inputTypes": [
+    //         "pdf"
+    //     ],
+    //     "outputTypes": [
+    //         "pdf"
+    //     ],
+    //     "image": summarize,
+    //     "label": "Copy Document",
+    //     "name": "copy",
+    //     "serviceSpecificConfig": {},
+    //     "serviceSpecificConfigDefaults": {}
+    // },
+    "changeOutput": {
+        "bpaServiceId": "abc123",
+        "inputTypes": [
+            "any"
+        ],
+        "outputTypes": [
+            "any"
+        ],
+        "image": summarize,
+        "label": "Change Output",
+        "name": "changeOutput",
+        "serviceSpecificConfig": {},
+        "serviceSpecificConfigDefaults": {}
+    },
+    "automlNer": {
+        "bpaServiceId": "abc123",
+        "inputTypes": [
+            "text"
+        ],
+        "outputTypes": [
+            "automlNer"
+        ],
+        "image": summarize,
+        "label": "Auto-ML NER Custom Model",
+        "name": "automlNer",
+        "serviceSpecificConfig": {},
+        "serviceSpecificConfigDefaults": {}
+    },
+    // "test": {
+    //     "bpaServiceId": "abc123",
+    //     "inputTypes": [
+    //         "pdf"
+    //     ],
+    //     "outputTypes": [
+    //         "test"
+    //     ],
+    //     "image": pdf,
+    //     "label": "Test Prebuilt Models",
+    //     "name": "test",
+    //     "serviceSpecificConfig": { "to":"es"},
+    //     "serviceSpecificConfigDefaults": {}
+    // },
     "pdf": {
         "bpaServiceId": "abc123",
         "inputTypes": [
@@ -373,6 +429,48 @@ export const sc = {
         "image": customNER,
         "label": "HuggingFace Pretrained NER Model",
         "name": "huggingFaceNER",
+        "serviceSpecificConfig": {},
+        "serviceSpecificConfigDefaults": {}
+    },
+    "preprocess": {
+        "bpaServiceId": "abc123",
+        "inputTypes": [
+            "text"
+        ],
+        "outputTypes": [
+            "preprocess"
+        ],
+        "image": customNER,
+        "label": "Preprocess Text",
+        "name": "preprocess",
+        "serviceSpecificConfig": {},
+        "serviceSpecificConfigDefaults": {}
+    },
+    "healthCare": {
+        "bpaServiceId": "abc123",
+        "inputTypes": [
+            "text"
+        ],
+        "outputTypes": [
+            "healthCareResults"
+        ],
+        "image": customClassification,
+        "label": "Health Care API",
+        "name": "healthCare",
+        "serviceSpecificConfig": {},
+        "serviceSpecificConfigDefaults": {}
+    },
+    "documentTranslation": {
+        "bpaServiceId": "abc123",
+        "inputTypes": [
+            "pdf"
+        ],
+        "outputTypes": [
+            "pdf"
+        ],
+        "image": customClassification,
+        "label": "Document Translation",
+        "name": "documentTranslation",
         "serviceSpecificConfig": {},
         "serviceSpecificConfigDefaults": {}
     }
